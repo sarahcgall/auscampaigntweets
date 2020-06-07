@@ -1,3 +1,4 @@
+#=========================LIBRARY============================#
 library(rtweet)
 library(tidytext)
 library(ggpubr)
@@ -16,76 +17,167 @@ library(extrafont)
 library(broom)
 
 set.seed(1, sample.kind="Rounding")
+#============================================================#
 
-#=========================SCRAPE=============================#
+
+#============================================================#
+##           Data Collection, Processing and Cleaning
+#=====================DATA COLLECTING========================#
+#Scrape leaders tweets from timeline:
 shorten <- get_timeline("@billshortenmp", n = 3200)
 morrison <- get_timeline("@ScottMorrisonMP", n = 3200)
 
-
-#=========================FILTER=============================#
+#=====================DATA CLEANING==========================#
 #Filter for tweets during 2019 Australian Federal Election Campaign (between 11 April 2019 and 18 May 2019)
+#Shorten Campaign Data
 shorten_campaign <- shorten %>%
   filter(created_at >= ymd("2019-04-11") &
            created_at < ymd("2019-05-18")) %>%
-  filter(!is_retweet) %>%
   mutate(source = str_replace(source, "Twitter for iPhone", "iPhone")) %>%
-  mutate(hour = hour(with_tz(created_at, "Australia/Sydney"))) %>%
+  mutate(created_at = with_tz(created_at, "Australia/Sydney")) %>%
+  mutate(date = date(created_at)) %>%
+  mutate(hour = hour(created_at)) %>%
+  mutate(is_reply = ifelse(!is.na(reply_to_screen_name), "Reply", NA)) %>%
+  mutate(is_quote = ifelse(is_quote == "TRUE", "Quote", NA)) %>%
+  mutate(is_retweet = ifelse(is_retweet == "TRUE", "Retweet", NA)) %>%
+  unite("type", is_reply, is_quote, is_retweet, sep = "", na.rm = FALSE) %>%
+  mutate(type = str_replace_all(type, "NA", "")) %>%
+  mutate(type = str_replace(type, "^$", "Organic")) %>%
+  unite("qr_favorite_count", quoted_favorite_count, retweet_favorite_count, sep = "", na.rm = FALSE) %>%
+  mutate(qr_favorite_count = str_replace_all(qr_favorite_count, "NA", "")) %>%
+  unite("qr_retweet_count", quoted_retweet_count, retweet_retweet_count, sep = "", na.rm = FALSE) %>%
+  mutate(qr_retweet_count = str_replace_all(qr_retweet_count, "NA", "")) %>%
+  unite("qr_name", quoted_name, retweet_name, sep = "", na.rm = FALSE) %>%
+  mutate(qr_name = str_replace_all(qr_name, "NA", "")) %>%
+  unite("qr_followers_count", quoted_followers_count, retweet_followers_count, sep = "", na.rm = FALSE) %>%
+  mutate(qr_followers_count = str_replace_all(qr_followers_count, "NA", "")) %>%
+  mutate(MP = "Bill Shorten MP") %>%
+  select(MP,created_at,date,hour,text,source,display_text_width,type,favorite_count,retweet_count,hashtags,urls_expanded_url,media_expanded_url,media_type,mentions_screen_name,qr_favorite_count,qr_retweet_count,qr_name,qr_followers_count) %>%
   arrange(created_at)
 
+#Morrison Campaign Data
 morrison_campaign <- morrison %>%
   filter(created_at >= ymd("2019-04-11") &
            created_at < ymd("2019-05-18")) %>%
-  filter(!is_retweet) %>%
   mutate(source = str_replace(source, "Twitter for iPhone", "iPhone")) %>%
-  mutate(hour = hour(with_tz(created_at, "Australia/Sydney"))) %>%
+  mutate(created_at = with_tz(created_at, "Australia/Sydney")) %>%
+  mutate(date = date(created_at)) %>%
+  mutate(hour = hour(created_at)) %>%
+  mutate(is_reply = ifelse(!is.na(reply_to_screen_name), "Reply", NA)) %>%
+  mutate(is_quote = ifelse(is_quote == "TRUE", "Quote", NA)) %>%
+  mutate(is_retweet = ifelse(is_retweet == "TRUE", "Retweet", NA)) %>%
+  unite("type", is_reply, is_quote, is_retweet, sep = "", na.rm = FALSE) %>%
+  mutate(type = str_replace_all(type, "NA", "")) %>%
+  mutate(type = str_replace(type, "^$", "Organic")) %>%
+  unite("qr_favorite_count", quoted_favorite_count, retweet_favorite_count, sep = "", na.rm = FALSE) %>%
+  mutate(qr_favorite_count = str_replace_all(qr_favorite_count, "NA", "")) %>%
+  unite("qr_retweet_count", quoted_retweet_count, retweet_retweet_count, sep = "", na.rm = FALSE) %>%
+  mutate(qr_retweet_count = str_replace_all(qr_retweet_count, "NA", "")) %>%
+  unite("qr_name", quoted_name, retweet_name, sep = "", na.rm = FALSE) %>%
+  mutate(qr_name = str_replace_all(qr_name, "NA", "")) %>%
+  unite("qr_followers_count", quoted_followers_count, retweet_followers_count, sep = "", na.rm = FALSE) %>%
+  mutate(qr_followers_count = str_replace_all(qr_followers_count, "NA", "")) %>%
+  mutate(MP = "Scott Morrison MP") %>%
+  select(MP,created_at,date,hour,text,source,display_text_width,type,favorite_count,retweet_count,hashtags,urls_expanded_url,media_expanded_url,media_type,mentions_screen_name,qr_favorite_count,qr_retweet_count,qr_name,qr_followers_count) %>%
   arrange(created_at)
 
-#=========================DATES=============================#
-#Organise data
-shorten_date <- shorten_campaign %>%
-  select(created_at) %>%
-  mutate(date = date(with_tz(created_at, "Australia/Sydney"))) %>%
-  count(date) %>%
-  mutate(MP = "Bill Shorten MP")
-morrison_date <- morrison_campaign %>%
-  select(created_at) %>%
-  mutate(date = date(with_tz(created_at, "Australia/Sydney"))) %>%
-  count(date) %>%
-  mutate(MP = "Scott Morrison MP")
-bothdates <- full_join(shorten_date, morrison_date, by = "date", suffix = c("shorten","morrison")) %>%
-  mutate(MPmorrison = replace_na(MPmorrison, replace = "Scott Morrison MP"), nmorrison = replace_na(nmorrison, replace = 0)) %>%
-  mutate(datemorrison = date)
-shorten_date <- bothdates %>%
-  select(date,nshorten,MPshorten) %>%
-  transmute(date = date, n = nshorten, MP = MPshorten)
-morrison_date <- bothdates %>%
-  select(datemorrison,nmorrison,MPmorrison) %>%
-  transmute(date = datemorrison, n = nmorrison, MP = MPmorrison)
-bothdates <- bind_rows(morrison_date, shorten_date)
+#Combined Leaders Campaign Data
+leaders_campaign <- bind_rows(shorten_campaign, morrison_campaign)
+#============================================================#
+
+
+#============================================================#
+##                 Visualising the Data
+#=========================TYPE===============================#
+#Summary statistics 
+leaders_campaign %>% select(MP) %>% count(MP)
+leaders_campaign %>% select(MP,type) %>% count(MP,type)
+
+#Total types of tweets
+shorten_type <- shorten_campaign %>%
+  select(type) %>%
+  count(type) %>%
+  mutate(n = (n/sum(n)*100)) %>%
+  mutate(label = paste0(str_trim(format(round(n, 1), nsmall = 1), "left"), "%")) %>%
+  ggdonutchart("n", label = "label", lab.pos = "in", lab.font = "white", fill = "type", 
+               colour = "white",
+               palette = c("#99000D","#EF3B2C","#FC9272")) +
+  labs(title = "Bill Shorten MP",
+       fill = "Tweet Type") +
+  theme(
+    plot.margin = margin(1,1,1,1, "cm"),
+    plot.background = element_rect(
+      fill = "white"
+    ),
+    plot.title = element_text(face = "plain", size = 12, family = "Calibri Light", hjust = 0.5, vjust = -150),
+    axis.title = element_blank(),
+    axis.text = element_text(face = "plain", size = 10, family = "Calibri Light"),
+    legend.title = element_text(face = "plain", size = 11, family = "Calibri Light"),
+    legend.text = element_text(face = "plain", size = 10, family = "Calibri Light"),
+    legend.position = "right"
+  )
+
+morrison_type <- morrison_campaign %>%
+  select(type) %>%
+  count(type) %>%
+  mutate(n = (n/sum(n)*100)) %>%
+  mutate(label = paste0(str_trim(format(round(n, 1), nsmall = 1), "left"), "%")) %>%
+  ggdonutchart("n", label = "label", lab.pos = "in", lab.font = "white", fill = "type", 
+               colour = "white",
+               palette = c("#084594","#2171B5","#4292C6","#6BAED6")) +
+  labs(title = "Scott Morrison MP",
+       fill = "Tweet Type") +
+  theme(
+    plot.margin = margin(1,1,1,1, "cm"),
+    plot.background = element_rect(
+      fill = "white"
+    ),
+    plot.title = element_text(face = "plain", size = 12, family = "Calibri Light", hjust = 0.5, vjust = -150),
+    axis.title = element_blank(),
+    axis.text = element_text(face = "plain", size = 10, family = "Calibri Light"),
+    legend.title = element_text(face = "plain", size = 11, family = "Calibri Light"),
+    legend.text = element_text(face = "plain", size = 10, family = "Calibri Light"),
+    legend.position = "right"
+  )
+
+typesplot <- ggarrange(shorten_type, morrison_type, heights = c(2, 2), ncol = 2, nrow = 1, align = "h", legend = "left")
+typesplot <- annotate_figure(typesplot,
+                top = text_grob("Ratio of types of tweet", vjust = 6, face = "plain", size = 18, family = "Calibri Light"))
+
+
+#=========================DATES==============================#
+#Summary statistics
+leaders_campaign %>% filter(MP == "Scott Morrison MP") %>% select(date) %>% count(date) %>% summary(n)
+leaders_campaign %>% filter(MP == "Scott Morrison MP") %>% select(date) %>% count(date) %>% arrange(desc(n))
+leaders_campaign %>% filter(MP == "Bill Shorten MP") %>% select(date) %>% count(date) %>% summary(n)
+leaders_campaign %>% filter(MP == "Bill Shorten MP") %>% select(date) %>% count(date) %>% arrange(desc(n))
+leaders_campaign %>% filter(MP == "Bill Shorten MP" & date == "2019-04-22") %>% select(text)
 
 #Create plot: Number of tweets per day
-dates <- bothdates %>%
+datesplot <- leaders_campaign %>%
+  select(MP, date) %>%
+  count(MP,date) %>%
   ggplot(aes(date, n, colour = MP)) +
   geom_line() +
   geom_point() +
   geom_vline(xintercept = as.Date("2019-05-18"), colour = "purple4", size = 0.5, linetype = "dashed", alpha = 0.8) +
-  geom_text(aes(x = as.Date("2019-05-18"), label = "2019 Australian Federal Election", y = 10), colour="purple4", angle=90, nudge_x = -0.4) +
+  geom_text(aes(x = as.Date("2019-05-18"), label = "2019 Australian Federal Election", y = 15), colour="purple4", angle=90, nudge_x = -0.4) +
   geom_vline(xintercept = as.Date("2019-04-11"), colour = "grey45", size = 0.5, linetype = "dashed", alpha = 0.8) +
-  geom_text(aes(x = as.Date("2019-04-11"), label = "Campaign Commences", y = 10), colour="grey45", angle=90, nudge_x = -0.4) +
+  geom_text(aes(x = as.Date("2019-04-11"), label = "Issue of writs", y = 15), colour="grey45", angle=90, nudge_x = -0.4) +
   geom_vline(xintercept = as.Date("2019-04-18"), colour = "grey45", size = 0.5, linetype = "dashed", alpha = 0.8) +
-  geom_text(aes(x = as.Date("2019-04-18"), label = "Close of electoral rolls", y = 10), colour="grey45", angle=90, nudge_x = -0.4) +
+  geom_text(aes(x = as.Date("2019-04-18"), label = "Close of electoral rolls", y = 15), colour="grey45", angle=90, nudge_x = -0.4) +
   geom_vline(xintercept = as.Date("2019-04-29"), colour = "grey45", size = 0.5, linetype = "dashed", alpha = 0.8) +
-  geom_text(aes(x = as.Date("2019-04-29"), label = "Early Voting Commences", y = 10), colour="grey45", angle=90, nudge_x = -0.4) +
+  geom_text(aes(x = as.Date("2019-04-29"), label = "Early voting commences", y = 15), colour="grey45", angle=90, nudge_x = -0.4) +
   geom_vline(xintercept = as.Date("2019-04-25"), colour = "indianred", size = 0.5, linetype = "dashed", alpha = 0.8) +
-  geom_text(aes(x = as.Date("2019-04-25"), label = "ANZAC Day", y = 10), colour="indianred", angle=90, nudge_x = -0.4) +
+  geom_text(aes(x = as.Date("2019-04-25"), label = "ANZAC Day", y = 15), colour="indianred", angle=90, nudge_x = -0.4) +
   geom_vline(xintercept = as.Date("2019-04-19"), colour = "indianred", size = 0.5, linetype = "dashed", alpha = 0.8) +
-  geom_text(aes(x = as.Date("2019-04-19"), label = "Good Friday", y = 10), colour="indianred", angle=90, nudge_x = -0.4) +
+  geom_text(aes(x = as.Date("2019-04-19"), label = "Good Friday", y = 15), colour="indianred", angle=90, nudge_x = -0.4) +
   geom_vline(xintercept = as.Date("2019-04-21"), colour = "indianred", size = 0.5, linetype = "dashed", alpha = 0.8) +
-  geom_text(aes(x = as.Date("2019-04-21"), label = "Easter Sunday", y = 10), colour="indianred", angle=90, nudge_x = -0.4) +
+  geom_text(aes(x = as.Date("2019-04-21"), label = "Easter Sunday", y = 15), colour="indianred", angle=90, nudge_x = -0.4) +
   geom_vline(xintercept = as.Date("2019-05-15"), colour = "grey45", size = 0.5, linetype = "dashed", alpha = 0.8) +
-  geom_text(aes(x = as.Date("2019-05-15"), label = "Media Blackout", y = 10), colour="grey45", angle=90, nudge_x = -0.4) +
+  geom_text(aes(x = as.Date("2019-05-15"), label = "Media blackout", y = 15), colour="grey45", angle=90, nudge_x = -0.4) +
   scale_colour_manual(values = c("#EF3B2C","#4292C6")) +
-  scale_y_continuous(limits = c(0, NA), expand = c(0,1)) +
+  scale_y_continuous(limits = c(1, 22), expand = c(0,1)) +
   labs(x = "Date",
        y = "No. of tweets",
        title = "Number of tweets per day",
@@ -103,10 +195,18 @@ dates <- bothdates %>%
     text = element_text(size=5, family = "Calibri Light", face = "plain")
   )
 
+
 #=========================DEVICE=============================#
-#Devices used to compose and upload Shorten and Morrison's tweets:
-shorten_campaign %>% count(source) %>% arrange(desc(n))
-morrison_campaign %>% count(source) %>% arrange(desc(n))
+#Summary statistics
+shorten_campaign %>% count(source) %>% mutate(n/sum(n)*100) %>% arrange(desc(n))
+morrison_campaign %>% count(source) %>% mutate(n/sum(n)*100) %>% arrange(desc(n))
+shorten_campaign %>% filter(source == "iPhone") %>% count(hour) %>% mutate(n/sum(n)*100) %>% arrange(desc(n))
+morrison_campaign %>% filter(source == "iPhone") %>% count(hour) %>% mutate(n/sum(n)*100) %>% arrange(desc(n))
+shorten_campaign %>% filter(source == "TweetDeck") %>% count(hour) %>% mutate(n/sum(n)*100) %>% arrange(desc(n))
+morrison_campaign %>% filter(source == "TweetDeck") %>% count(hour) %>% mutate(n/sum(n)*100) %>% arrange(desc(n))
+shorten_campaign %>% filter(source == "Periscope") %>% count(hour) %>% mutate(n/sum(n)*100) %>% arrange(desc(n))
+morrison_campaign %>% filter(source == "Twitter Web Client") %>% count(hour) %>% mutate(n/sum(n)*100) %>% arrange(desc(n))
+
 
 #Create plot: Proportion of tweets tweeted at each hour for each device
 shorten_device <- shorten_campaign %>%
@@ -169,66 +269,36 @@ devices <- ggarrange(morrison_device, shorten_device, heights = c(2, 2), ncol = 
 devices <- annotate_figure(devices,
                 top = text_grob("Proportion of tweets tweeted at each hour of the day by device", face = "plain", size = 18, family = "Calibri Light"))
 
-#=========================PERFORMANCE=============================#
-#Most liked tweets:
-shorten_campaign %>% arrange(desc(favorite_count))
-morrison_campaign %>% arrange(desc(favorite_count))
-
-#Most retweeted tweets:
-shorten_campaign %>% arrange(desc(retweet_count))
-morrison_campaign %>% arrange(desc(retweet_count))
 
 
-
-
-#=========================CLEAN=============================#
-#Extract all words from tweets, remove links to pictures, and remove stop words:
-shorten_words <- shorten_campaign %>% 
+#======================WORD FREQUENCY==========================#
+#Clean - Extract all words from tweets, remove links to pictures, and remove stop words:
+shorten_words <- shorten_campaign %>%
   mutate(text = str_replace_all(text, "https://t.co/[A-Za-z\\d]+|&amp;", ""))  %>%
   unnest_tokens(word, text, token = "tweets") %>%
-  filter(!word %in% stop_words$word & !str_detect(word, "^\\d+$")) %>%
+  filter(!word %in% stop_words$word & !str_detect(word, "^\\d+$") & type != "retweet") %>%
   mutate(word = str_replace(word, "^'", ""))
 
-morrison_words <- morrison_campaign %>% 
+morrison_words <- morrison_campaign %>%
   mutate(text = str_replace_all(text, "https://t.co/[A-Za-z\\d]+|&amp;", ""))  %>%
   unnest_tokens(word, text, token = "tweets") %>%
-  filter(!word %in% stop_words$word & !str_detect(word, "^\\d+$")) %>%
+  filter(!word %in% stop_words$word & !str_detect(word, "^\\d+$") & type != "retweet") %>%
   mutate(word = str_replace(word, "^'", ""))
+  
 
+#Summary Statistics
+nrow(shorten_words)
+nrow(morrison_words)
+shorten_words %>% count(word) %>% arrange(desc(n))
+morrison_words %>% count(word) %>% arrange(desc(n))
+shorten_words %>% count(word) %>% summary(n)
+morrison_words %>% count(word) %>% summary(n)
 
-#=========================WORDS=============================#
-#Most commonly used words:
-shorten_wordcount <- shorten_words %>%
-  count(word) %>%
-  arrange(desc(n))
-
-morrison_wordcount <- morrison_words %>%
-  count(word) %>%
-  arrange(desc(n))
-
-#=========================WORDCLOUD=============================#
-#Create a wordcloud of commonly used words
-shorten_wordcloud <- head(shorten_wordcount, 52) %>%
-  ggplot(aes(label = word, size = n, replace = TRUE)) +
-  geom_text_wordcloud_area(color = "#e2363e") +
-  scale_size_area(max_size = 26) +
-  theme_minimal()
-
-morrison_wordcloud <- head(morrison_wordcount, 45) %>%
-  ggplot(aes(label = word, size = n, replace = TRUE)) +
-  geom_text_wordcloud_area(color = "#154e9d") +
-  scale_size_area(max_size = 26) +
-  theme_minimal()
-
-wordclouds <- ggarrange(morrison_wordcloud, shorten_wordcloud, heights = c(2, 2), ncol = 1, nrow = 2, align = "v")
-wordclouds <- annotate_figure(wordclouds,
-                top = text_grob("Top words used in tweets", face = "bold", size = 18))
-
-#=========================WORDMAP=============================#
+#Wordcloud Plot:
 #Remove words less with frequency less than 4
-shorten_wordcount1 <- shorten_wordcount %>%
+shorten_wordcount <- shorten_wordcount %>%
   filter(!n <= 4)
-morrison_wordcount1 <- morrison_wordcount %>%
+morrison_wordcount <- morrison_wordcount %>%
   filter(!n <= 4)
 
 #Join Morrison and Shorten df and determine difference in usage
@@ -314,4 +384,33 @@ wordcloudplot <- ggplot(shorten1, aes(x=difference, y=Spacing)) +
     plot.title = element_text(size = 18, face = "plain", hjust = 0.5, vjust = 3, family = "Calibri Light")
     
   )
+
+
+
+#=========================CONTENT=============================#
+#Clean
+
+
+
+#Create a wordcloud of commonly used words (NB. WORK IN PROGRESS)
+head(shorten_wordcount, 52) %>%
+  ggplot(aes(label = word, size = n, replace = TRUE)) +
+  geom_text_wordcloud_area(color = "#e2363e") +
+  scale_size_area(max_size = 26) +
+  theme_minimal()
+
+head(morrison_wordcount, 45) %>%
+  ggplot(aes(label = word, size = n, replace = TRUE)) +
+  geom_text_wordcloud_area(color = "#154e9d") +
+  scale_size_area(max_size = 26) +
+  theme_minimal()
+
+ggarrange(morrison_wordcloud, shorten_wordcloud, heights = c(2, 2), ncol = 1, nrow = 2, align = "v")
+annotate_figure(wordclouds,
+                              top = text_grob("Top words used in tweets", face = "bold", size = 18))
+
+
+#=========================ENGAGEMENT=============================#
+#Clean
+
 
