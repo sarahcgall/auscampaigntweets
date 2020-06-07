@@ -56,7 +56,7 @@ The data were then cleaned and stored in three dataframes, `shorten_campaign`, `
 
 ## Visualising the Data
 #### Types
-Throughout the entirety of the campaign, Shorten tweeted 163 times and Morrison tweeted 131 times. These tweets consisted of organic tweets (*Shorten = 148; Morrison = 93*), replies to tweets (*Shorten = 12; Morrison = 25*), quotes (*Shorten = 3; Morrison = 25*), and retweets (*Shorten = 0; Morrison = 10*).
+Throughout the entirety of the campaign, Shorten tweeted 163 times and Morrison tweeted 131 times. These tweets consisted of organic tweets (*Shorten = 148 (90.8%); Morrison = 93 (71.0%)*), replies to tweets (*Shorten = 12 (7.4%); Morrison = 25 (19.1%)*), quotes (*Shorten = 3 (1.8%); Morrison = 3 (2.3%)*), and retweets (*Shorten = 0 (0.0%); Morrison = 10 (7.6%)*).
 
 The following plot shows the ratio of organic tweets, replies, quotes and retweets by each leader.
 
@@ -84,8 +84,6 @@ Tweets from Morrison's iPhone was most likely to occur at 9am (*11% of tweets*) 
 The following plot shows the proportion of tweets at each hour of the day by device by each leader. 
 
 ![DevicesPlot](https://github.com/sarahcgall/auscampaigntweets/blob/master/figs/DevicesPlot.png)
-
-
 
 #### Word Frequency
 In order to analyse the word frequency of each leader, the data was cleaned and stored in two dataframes, `shorten_words` and `morrison words`. This process included: 
@@ -133,11 +131,10 @@ Morrison tweeted a total of 1973 and on average repeated words twice (*mean = 1.
 | country | 13 |
 
 
+
 The following plot shows the difference in words tweeted by each leader and their frequency.
 
 ![WordcloudPlot](https://github.com/sarahcgall/auscampaigntweets/blob/master/figs/WordcloudPlot.png)
-
-
 
 #### Content
 
