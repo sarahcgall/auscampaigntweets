@@ -15,6 +15,7 @@ library(ggpubr)
 library(ggrepel)
 library(extrafont)
 library(broom)
+library(gghighlight)
 
 set.seed(1, sample.kind="Rounding")
 #============================================================#
@@ -40,6 +41,7 @@ shorten_campaign <- shorten %>%
   mutate(is_reply = ifelse(!is.na(reply_to_screen_name), "Reply", NA)) %>%
   mutate(is_quote = ifelse(is_quote == "TRUE", "Quote", NA)) %>%
   mutate(is_retweet = ifelse(is_retweet == "TRUE", "Retweet", NA)) %>%
+  mutate(total_count = favorite_count + retweet_count) %>%
   unite("type", is_reply, is_quote, is_retweet, sep = "", na.rm = FALSE) %>%
   mutate(type = str_replace_all(type, "NA", "")) %>%
   mutate(type = str_replace(type, "^$", "Organic")) %>%
@@ -52,7 +54,7 @@ shorten_campaign <- shorten %>%
   unite("qr_followers_count", quoted_followers_count, retweet_followers_count, sep = "", na.rm = FALSE) %>%
   mutate(qr_followers_count = str_replace_all(qr_followers_count, "NA", "")) %>%
   mutate(MP = "Bill Shorten MP") %>%
-  select(MP,created_at,date,hour,text,source,display_text_width,type,favorite_count,retweet_count,hashtags,urls_expanded_url,media_expanded_url,media_type,mentions_screen_name,qr_favorite_count,qr_retweet_count,qr_name,qr_followers_count) %>%
+  select(MP,created_at,date,hour,text,source,display_text_width,type,favorite_count,retweet_count,total_count,hashtags,urls_expanded_url,media_expanded_url,media_type,mentions_screen_name,qr_favorite_count,qr_retweet_count,qr_name,qr_followers_count) %>%
   arrange(created_at)
 
 #Morrison Campaign Data
@@ -66,6 +68,7 @@ morrison_campaign <- morrison %>%
   mutate(is_reply = ifelse(!is.na(reply_to_screen_name), "Reply", NA)) %>%
   mutate(is_quote = ifelse(is_quote == "TRUE", "Quote", NA)) %>%
   mutate(is_retweet = ifelse(is_retweet == "TRUE", "Retweet", NA)) %>%
+  mutate(total_count = favorite_count + retweet_count) %>%
   unite("type", is_reply, is_quote, is_retweet, sep = "", na.rm = FALSE) %>%
   mutate(type = str_replace_all(type, "NA", "")) %>%
   mutate(type = str_replace(type, "^$", "Organic")) %>%
@@ -78,7 +81,7 @@ morrison_campaign <- morrison %>%
   unite("qr_followers_count", quoted_followers_count, retweet_followers_count, sep = "", na.rm = FALSE) %>%
   mutate(qr_followers_count = str_replace_all(qr_followers_count, "NA", "")) %>%
   mutate(MP = "Scott Morrison MP") %>%
-  select(MP,created_at,date,hour,text,source,display_text_width,type,favorite_count,retweet_count,hashtags,urls_expanded_url,media_expanded_url,media_type,mentions_screen_name,qr_favorite_count,qr_retweet_count,qr_name,qr_followers_count) %>%
+  select(MP,created_at,date,hour,text,source,display_text_width,type,favorite_count,retweet_count,total_count,hashtags,urls_expanded_url,media_expanded_url,media_type,mentions_screen_name,qr_favorite_count,qr_retweet_count,qr_name,qr_followers_count) %>%
   arrange(created_at)
 
 #Combined Leaders Campaign Data
@@ -208,7 +211,7 @@ shorten_campaign %>% filter(source == "Periscope") %>% count(hour) %>% mutate(n/
 morrison_campaign %>% filter(source == "Twitter Web Client") %>% count(hour) %>% mutate(n/sum(n)*100) %>% arrange(desc(n))
 
 
-#Create plot: Proportion of tweets tweeted at each hour for each device
+#Create plot: DevicesPlot - Proportion of tweets tweeted at each hour for each device
 shorten_device <- shorten_campaign %>%
   count(source, hour) %>%
   group_by(source) %>%
@@ -276,13 +279,13 @@ devices <- annotate_figure(devices,
 shorten_words <- shorten_campaign %>%
   mutate(text = str_replace_all(text, "https://t.co/[A-Za-z\\d]+|&amp;", ""))  %>%
   unnest_tokens(word, text, token = "tweets") %>%
-  filter(!word %in% stop_words$word & !str_detect(word, "^\\d+$") & type != "retweet") %>%
+  filter(!word %in% stop_words$word & !str_detect(word, "^\\d+$") & type != "Retweet") %>%
   mutate(word = str_replace(word, "^'", ""))
 
 morrison_words <- morrison_campaign %>%
   mutate(text = str_replace_all(text, "https://t.co/[A-Za-z\\d]+|&amp;", ""))  %>%
   unnest_tokens(word, text, token = "tweets") %>%
-  filter(!word %in% stop_words$word & !str_detect(word, "^\\d+$") & type != "retweet") %>%
+  filter(!word %in% stop_words$word & !str_detect(word, "^\\d+$") & type != "Retweet") %>%
   mutate(word = str_replace(word, "^'", ""))
   
 
@@ -294,7 +297,7 @@ morrison_words %>% count(word) %>% arrange(desc(n))
 shorten_words %>% count(word) %>% summary(n)
 morrison_words %>% count(word) %>% summary(n)
 
-#Wordcloud Plot:
+#Prepare data for plot:
 #Remove words less with frequency less than 4
 shorten_wordcount <- shorten_wordcount %>%
   filter(!n <= 4)
@@ -353,7 +356,7 @@ morrison1 = transform(morrison1, Spacing=morrison_optim)
 
 both1$Spacing = as.vector(both_spacing)
 
-#Create plot
+#Create Plot: WordcloudPlot
 wordcloudplot <- ggplot(shorten1, aes(x=difference, y=Spacing)) +
   geom_text_repel(aes(label=word,
                 colour=difference, size = nshorten/3), segment.color = 'transparent', alpha=0.8) +
@@ -411,6 +414,165 @@ annotate_figure(wordclouds,
 
 
 #=========================ENGAGEMENT=============================#
-#Clean
+#Summary Statistics
+leaders_campaign %>% filter(MP == "Bill Shorten MP" & type != "Retweet") %>% select(favorite_count, retweet_count, total_count) %>% count(sum(total_count),sum(retweet_count),sum(favorite_count))
+leaders_campaign %>% filter(MP == "Bill Shorten MP" & type != "Retweet") %>% select(favorite_count, retweet_count, total_count) %>% summary(total_count)
+leaders_campaign %>% filter(MP == "Bill Shorten MP" & type != "Retweet") %>% select(date, favorite_count, retweet_count, total_count, text) %>% arrange(desc(total_count))
+
+leaders_campaign %>% filter(MP == "Scott Morrison MP" & type != "Retweet") %>% select(favorite_count, retweet_count, total_count) %>% count(sum(total_count),sum(retweet_count),sum(favorite_count))
+leaders_campaign %>% filter(MP == "Scott Morrison MP" & type != "Retweet") %>% select(favorite_count, retweet_count, total_count) %>% summary(total_count)
+leaders_campaign %>% filter(MP == "Scott Morrison MP" & type != "Retweet") %>% select(date, favorite_count, retweet_count, total_count, text) %>% arrange(desc(total_count))
+
+#Create Plot: TotalPlot
+leaders_campaign %>% 
+  filter(type != "Retweet") %>% 
+  select(MP, date, total_count) %>%
+  ggplot(aes(date, total_count, fill = MP, colour = total_count)) +
+  geom_bar(stat = "identity", position = "stack", alpha = 0.7, colour = "grey90") +
+  geom_vline(xintercept = as.Date("2019-05-18"), colour = "purple4", size = 0.5, linetype = "dashed", alpha = 0.8) +
+  geom_vline(xintercept = as.Date("2019-04-11"), colour = "grey45", size = 0.5, linetype = "dashed", alpha = 0.8) +
+  geom_vline(xintercept = as.Date("2019-04-18"), colour = "grey45", size = 0.5, linetype = "dashed", alpha = 0.8) +
+  geom_vline(xintercept = as.Date("2019-04-29"), colour = "grey45", size = 0.5, linetype = "dashed", alpha = 0.8) +
+  geom_vline(xintercept = as.Date("2019-04-25"), colour = "indianred", size = 0.5, linetype = "dashed", alpha = 0.8) +
+  geom_vline(xintercept = as.Date("2019-04-19"), colour = "indianred", size = 0.5, linetype = "dashed", alpha = 0.8) +
+  geom_vline(xintercept = as.Date("2019-04-21"), colour = "indianred", size = 0.5, linetype = "dashed", alpha = 0.8) +
+  geom_vline(xintercept = as.Date("2019-05-15"), colour = "grey45", size = 0.5, linetype = "dashed", alpha = 0.8) +
+  scale_y_continuous(limits = c(0,NA), expand = c(0,1000)) +
+  scale_fill_manual(values = c("#EF3B2C","#4292C6")) +
+  labs(x="Date", 
+       y="Total engagement", 
+       title = "Number of engagements (likes & retweets) per tweet per day",
+       fill = "MP") +
+  facet_grid(row = vars(MP)) +
+  gghighlight(label_key = MP, use_direct_label = FALSE) +
+  theme(
+    plot.margin = margin(1,1,1,1, "cm"),
+    plot.background = element_rect(
+      fill = "white"
+    ),
+    plot.title = element_text(face = "plain", size = 18, family = "Calibri Light", hjust = 0.5, vjust = 3),
+    axis.title = element_text(face = "plain", size = 10, family = "Calibri Light"),
+    axis.text = element_text(face = "plain", size = 10, family = "Calibri Light"),
+    legend.title = element_text(face = "plain", size = 11, family = "Calibri Light"),
+    legend.text = element_text(face = "plain", size = 10, family = "Calibri Light"),
+    strip.text.y = element_blank()
+  )
+
+
+#Create Plot: EngagementsPlot
+#Likes - normal scale
+like_normal <- leaders_campaign %>%
+  filter(type != "Retweet") %>% 
+  select(MP, type, favorite_count) %>%
+  ggplot(aes(MP, favorite_count, fill = MP)) +
+  geom_boxplot(outlier.colour = "black", alpha = 0.7) +
+  scale_fill_manual(values = c("#EF3B2C","#4292C6")) +
+  labs(title = "No. of Likes",
+       y = "No. of likes",
+       fill = "MP") +
+  facet_wrap(~type, strip.position="bottom") +
+  theme(
+    plot.margin = margin(1,1,1,1, "cm"),
+    plot.background = element_rect(
+      fill = "white"
+    ),
+    plot.title = element_text(face = "plain", size = 13, family = "Calibri Light", hjust = 0.5),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(face = "plain", size = 10, family = "Calibri Light"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.title = element_text(face = "plain", size = 11, family = "Calibri Light"),
+    legend.text = element_text(face = "plain", size = 10, family = "Calibri Light")
+  )
+
+#Likes - log10 scale
+like_log <- leaders_campaign %>%
+  filter(type != "Retweet") %>% 
+  select(MP, type, favorite_count) %>%
+  ggplot(aes(MP, favorite_count, fill = MP)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) +
+  scale_y_log10() +
+  scale_fill_manual(values = c("#EF3B2C","#4292C6")) +
+  labs(title = "No. of Likes (log10 scale)",
+       y = "No. of likes (log10)",
+       fill = "MP") +
+  facet_wrap(~type, strip.position="bottom") +
+  theme(
+    plot.margin = margin(1,1,1,1, "cm"),
+    plot.background = element_rect(
+      fill = "white"
+    ),
+    plot.title = element_text(face = "plain", size = 13, family = "Calibri Light", hjust = 0.5),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(face = "plain", size = 10, family = "Calibri Light"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.title = element_text(face = "plain", size = 11, family = "Calibri Light"),
+    legend.text = element_text(face = "plain", size = 10, family = "Calibri Light")
+  )
+
+
+#Retweets - normal scale
+retweet_normal <- leaders_campaign %>%
+  filter(type != "Retweet") %>% 
+  select(MP, type, retweet_count) %>%
+  ggplot(aes(MP, retweet_count, fill = MP)) +
+  geom_boxplot(outlier.colour = "black", alpha = 0.7) +
+  scale_fill_manual(values = c("#EF3B2C","#4292C6")) +
+  labs(title = "No. of Retweets",
+       y = "No. of retweets",
+       fill = "MP") +
+  facet_wrap(~type, strip.position="bottom") +
+  theme(
+    plot.margin = margin(1,1,1,1, "cm"),
+    plot.background = element_rect(
+      fill = "white"
+    ),
+    plot.title = element_text(face = "plain", size = 13, family = "Calibri Light", hjust = 0.5),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(face = "plain", size = 10, family = "Calibri Light"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.title = element_text(face = "plain", size = 11, family = "Calibri Light"),
+    legend.text = element_text(face = "plain", size = 10, family = "Calibri Light")
+  )
+
+#Retweets - log10 scale
+retweet_log <- leaders_campaign %>%
+  filter(type != "Retweet") %>% 
+  select(MP, type, retweet_count) %>%
+  ggplot(aes(MP, retweet_count, fill = MP)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) +
+  scale_y_log10() +
+  scale_fill_manual(values = c("#EF3B2C","#4292C6")) +
+  labs(title = "No. of Retweets (log10 scale)",
+       y = "No. of retweets",
+       fill = "MP") +
+  facet_wrap(~type, strip.position="bottom") +
+  theme(
+    plot.margin = margin(1,1,1,1, "cm"),
+    plot.background = element_rect(
+      fill = "white"
+    ),
+    plot.title = element_text(face = "plain", size = 13, family = "Calibri Light", hjust = 0.5),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(face = "plain", size = 10, family = "Calibri Light"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.title = element_text(face = "plain", size = 11, family = "Calibri Light"),
+    legend.text = element_text(face = "plain", size = 10, family = "Calibri Light")
+  )
+
+engagementplot <- ggarrange(like_normal, like_log, retweet_normal, retweet_log, heights = c(2, 2), ncol = 2, nrow = 2, align = "h", common.legend = TRUE, legend = "bottom")
+engagementplot <- annotate_figure(engagementplot,
+                             top = text_grob("Tweet Engagement", vjust = 1, face = "plain", size = 18, family = "Calibri Light")) 
+
+
 
 
