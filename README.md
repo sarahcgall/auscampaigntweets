@@ -1,7 +1,7 @@
 # 2019 Australian Federal Election Campaign Tweets
 This is an analysis of tweets by the Prime Minister of Australia, Scott Morrison MP, and the then-Leader of the Opposition, Bill Shorten MP, during the 2019 Australian Federal Election.
 
-| **Scott Morrison MP**  | **Bill Shorten MP** |
+| ![morrison](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/morrison.png)  | ![shorten](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/shorten.png) |
 | ------------- | ------------- |
 | [\@ScottMorrisonMP](http://www.twitter.com/ScottMorrisonMP)| [\@billshortenmp](http://www.twitter.com/billshortenmp)|
 | 394,821 followers | 345,761 followers |
