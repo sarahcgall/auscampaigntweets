@@ -163,18 +163,18 @@ A number of outliers related to key events during the campaign, most notedbly th
 
 ***Top 10 tweets during the campaign***
 
-|  |**Prompting Event**  | **Tweet** | **No. of Likes**  | **No. of Retweets** |
-| ------------- | ------------- | ------------- | ------------- | ------------- |
-| 1. | the death of former Labor Prime Minister, Bob Hawke | ![hawke](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/hawke.PNG) |  13,629 | 2,986 |
-| 2. | the condemnation of a [Daily Telegraph](https://www.dailytelegraph.com.au/news/nsw/labor-leader-bill-shortens-heartfelt-story-about-his-mother-was-missing-one-vital-fact/news-story/eeab8c4d16e3f55304e06eaa704699c9) front-page article headlined *"Mother of Invetion"* which accused Shorten of neglecting to tell the full story about his mum  | ![mum](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/mum.PNG) | 7,448 |  1,835 |
-| 3. | during the second leaders' debate, Shorten accused Morrison of being a 'classic space invader' *(Source: [ABC News, 03-May-19](https://www.abc.net.au/news/2019-05-03/bill-shorten-accuses-scott-morrison-of-being-a/11079416?nw=0))* | ![spaceinvaders](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/spaceinvaders.PNG) | 6,718 | 1,348 |
-| 4. | Election Day | ![change](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/change.PNG) | 5,936 | 875 |
-| 5. | the death of former Labor Prime Minister, Bob Hawke | ![bob](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/bob.PNG) | 5,678 | 878 |
-| 6. | one day before Election Day | ![chaos](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/chaos.PNG) | 4,105 | 884 |
-| 7. | the death of former Labor Prime Minister, Bob Hawke | ![hawke1](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/hawke1.PNG) | 4,155 | 565 |
-| 8. | one week before Election Day | ![abc](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/abc.PNG) | 3,603 | 1,029 |
-| 9. | Morrison helped an older lady up after she been knocked over during an incident involving a protester attempting to egg the Prime Mininster *(Source: [ABC News, 8-May-19](https://www.abc.net.au/news/2019-05-07/scott-morrison-egged-on-federal-election-campaign-trail/11087174?nw=0))*  | ![albury](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/albury.PNG) | 3,840 | 593 |
-| 10. | former Labor Prime Minister, Bob Hawke, endorces Shorten *(Source: [David Crowe, The Age, 15-May-19](https://www.theage.com.au/federal-election-2019/hawke-backs-shorten-as-consensus-leader-in-new-open-letter-20190514-p51nbm.html))* | ![bob1](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/bob1.PNG) | 3,579 | 820 |
+|  |**Tweet**  | **Prompting Event** | **No. of Likes**  | **No. of Retweets** |
+| :-----------: | :-----------: | :------------ | :-----------: | :-----------: |
+| 1. | ![hawke](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/hawke.PNG) | the death of former Labor Prime Minister, Bob Hawke |  13,629 | 2,986 |
+| 2. |  ![mum](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/mum.PNG) | the condemnation of a [Daily Telegraph](https://www.dailytelegraph.com.au/news/nsw/labor-leader-bill-shortens-heartfelt-story-about-his-mother-was-missing-one-vital-fact/news-story/eeab8c4d16e3f55304e06eaa704699c9) front-page article headlined *"Mother of Invetion"* which accused Shorten of neglecting to tell the full story about his mum | 7,448 |  1,835 |
+| 3. | ![spaceinvaders](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/spaceinvaders.PNG) | during the second leaders' debate, Shorten accused Morrison of being a 'classic space invader' *(Source: [ABC News, 03-May-19](https://www.abc.net.au/news/2019-05-03/bill-shorten-accuses-scott-morrison-of-being-a/11079416?nw=0))* | 6,718 | 1,348 |
+| 4. | ![change](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/change.PNG) | Election Day | 5,936 | 875 |
+| 5. | ![bob](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/bob.PNG) | the death of former Labor Prime Minister, Bob Hawke | 5,678 | 878 |
+| 6. | ![chaos](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/chaos.PNG) | one day before Election Day | 4,105 | 884 |
+| 7. | ![hawke1](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/hawke1.PNG) | the death of former Labor Prime Minister, Bob Hawke | 4,155 | 565 |
+| 8. | ![abc](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/abc.PNG) | one week before Election Day | 3,603 | 1,029 |
+| 9. | ![albury](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/albury.PNG) | Morrison helped an older lady up after she been knocked over during an incident involving a protester attempting to egg the Prime Mininster *(Source: [ABC News, 8-May-19](https://www.abc.net.au/news/2019-05-07/scott-morrison-egged-on-federal-election-campaign-trail/11087174?nw=0))* | 3,840 | 593 |
+| 10. | ![bob1](https://github.com/sarahcgall/auscampaigntweets/blob/master/tweets/bob1.PNG) | former Labor Prime Minister, Bob Hawke, endorces Shorten *(Source: [David Crowe, The Age, 15-May-19](https://www.theage.com.au/federal-election-2019/hawke-backs-shorten-as-consensus-leader-in-new-open-letter-20190514-p51nbm.html))* | 3,579 | 820 |
 
 
 ## Analysing the Data
